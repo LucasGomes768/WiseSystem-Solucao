@@ -1,6 +1,8 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using SigoWebApp.Data;
 using SigoWebApp.Models;
+using System.Data.Common;
 using System.Net;
 
 namespace SigoWebApp.Controllers
@@ -9,17 +11,31 @@ namespace SigoWebApp.Controllers
     [ApiController]
     public class FuncionarioController : ControllerBase
     {
-        [HttpGet]
-        public List<Funcionario> RetornaFuncionarios()
+        private readonly IDbConnectionService _context;
+
+        public FuncionarioController(IDbConnectionService context) 
         {
-            throw new NotImplementedException();
+            _context = context;
         }
 
         [HttpGet]
-        public List<Funcionario> RetornaFuncionario(int id)
+        public List<Funcionario> RetornaFuncionarios()
         {
-            throw new NotImplementedException();
+            List<Funcionario> funcionarios = new List<Funcionario>();
+            //_context.FechaConexao();
+            _context.CriaFuncionario();
+            funcionarios = _context.RetornaFuncionarios();
+            
+            return funcionarios;
+            //_context.FechaConexao();
+
         }
+
+        //[HttpGet]
+        //public List<Funcionario> RetornaFuncionario(int id)
+        //{
+        //    throw new NotImplementedException();
+        //}
 
         [HttpPost]
         HttpStatusCode SalvaFuncionario(Empresa empresa)

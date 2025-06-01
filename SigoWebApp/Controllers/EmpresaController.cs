@@ -15,11 +15,11 @@ namespace SigoWebApp.Controllers
             throw new NotImplementedException();
         }
 
-        [HttpGet]
-        public Empresa RetornaEmpresa(int id) 
-        {
-            throw new NotImplementedException(); 
-        }
+        //[HttpGet]
+        //public Empresa RetornaEmpresa(int id) 
+        //{
+        //    throw new NotImplementedException(); 
+        //}
 
         [HttpPost]
         HttpStatusCode SalvaEmpresa(Empresa empresa)
