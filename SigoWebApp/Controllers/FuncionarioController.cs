@@ -13,7 +13,7 @@ namespace SigoWebApp.Controllers
     {
         private readonly IDbConnectionService _context;
 
-        public FuncionarioController(IDbConnectionService context) 
+        public FuncionarioController(IDbConnectionService context)
         {
             _context = context;
         }
@@ -25,17 +25,22 @@ namespace SigoWebApp.Controllers
             //_context.FechaConexao();
             _context.CriaFuncionario();
             funcionarios = _context.RetornaFuncionarios();
-            
+
             return funcionarios;
             //_context.FechaConexao();
 
         }
 
-        //[HttpGet]
-        //public List<Funcionario> RetornaFuncionario(int id)
-        //{
-        //    throw new NotImplementedException();
-        //}
+        [HttpGet("{id}")]
+        public List<Funcionario> RetornaFuncionarioPorId(int id)
+        {
+            List<Funcionario> funcionario = new List<Funcionario>();
+            //_context.CriaFuncionario();
+
+            funcionario = _context.RetornaFuncionarioPorId(id);
+
+            return funcionario;
+        }
 
         [HttpPost]
         HttpStatusCode SalvaFuncionario(Empresa empresa)

@@ -86,6 +86,39 @@ namespace SigoWebApp.Data
             return funcionarios;
         }
 
+        public List<Funcionario> RetornaFuncionarioPorId(int id)
+        {
+            var funcionario = new List<Funcionario>();
+            _connection.Open();
+
+            var command = _connection.CreateCommand();
+            command.CommandText =
+            @"
+                SELECT *
+                FROM funcionario
+                WHERE id = $id
+            ";
+            command.Parameters.AddWithValue("$id", id);
+
+            using (var reader = command.ExecuteReader())
+            {
+                while (reader.Read())
+                {
+                    funcionario.Add(new Funcionario
+                    {
+                        Cpf = reader.GetDouble(1),
+                        Nome = reader.GetString(2),
+                        DataNascimento = reader.GetDateTime(3),
+                        DataAdmissao = reader.GetDateTime(4),
+                        DataDemissao = reader.GetDateTime(5),
+                        Funcao = reader.GetString(6),
+                        Setor = reader.GetString(7)
+                    });
+                }
+            }
+            return funcionario;
+        }
+
         public void FechaConexao() 
         {
             SqliteConnection.ClearAllPools();
