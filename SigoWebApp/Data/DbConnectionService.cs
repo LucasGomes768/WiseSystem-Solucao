@@ -40,22 +40,25 @@ namespace SigoWebApp.Data
                 createEndereco.CommandText =
                     @"
                     CREATE TABLE IF NOT EXISTS endereco(
-                    id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
-                    logradouro TEXT,
-                    bairro TEXT,
-                    cidade TEXT,
-                    uf TEXT,
-                    cep DOUBLE
-                );
+                        id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+                        logradouro TEXT,
+                        bairro TEXT,
+                        cidade TEXT,
+                        uf TEXT,
+                        cep DOUBLE
+                    );
 
                     INSERT INTO endereco
-                    VALUES (1, 'Rua Cristal', 'Brilhante', 'Mina', 'DF', '00222050')
-                    VALUES (2, 'Rua Ametista', 'Brilhante', 'Mina', 'DF', '00222060')
-                    VALUES (3, 'Rua Esmeralda', 'Brilhante', 'Mina', 'DF', '00222070')
-                    VALUES (4, 'Rua Safira', 'Brilhante', 'Mina', 'DF', '00222080')
-                    VALUES (5, 'Rua Quartzo', 'Brilhante', 'Mina', 'DF', '00222090')
+                    VALUES (1, 'Rua Cristal', 'Brilhante', 'Mina', 'DF', '00222050'),
+                    (2, 'Rua Ametista', 'Brilhante', 'Mina', 'DF', '00222060'),
+                    (3, 'Rua Esmeralda', 'Brilhante', 'Mina', 'DF', '00222070'),
+                    (4, 'Rua Safira', 'Brilhante', 'Mina', 'DF', '00222080'),
+                    (5, 'Rua Quartzo', 'Brilhante', 'Mina', 'DF', '00222090');
                 ";
-                createEndereco = _connection.CreateCommand();
+                // Código original alterado
+                // Tabela de endereços não era criada
+                // Comando antigo: createEndereco = _connection.CreateCommand();
+                createEndereco.ExecuteNonQuery();
 
                 var createFuncionario = _connection.CreateCommand();
                 createFuncionario.CommandText =
@@ -87,6 +90,36 @@ namespace SigoWebApp.Data
                 createFuncionario.ExecuteNonQuery();
 
             }
+
+            // Verificar se existe tabela das empresas existe
+            var comCheck = _connection.CreateCommand();
+            comCheck.CommandText = "SELECT name FROM sqlite_master WHERE type='table' AND name='empresa'";
+
+            var comResult = comCheck.ExecuteScalar();
+
+            if (comResult == null)
+            {
+                var createEmpresas = _connection.CreateCommand();
+                createEmpresas.CommandText =
+                    @"
+                    CREATE TABLE IF NOT EXISTS empresa (
+                        id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+                        cnpj DOUBLE NOT NULL,
+                        razaoSocial TEXT NOT NULL,
+                        nomeFantasia TEXT NOT NULL,
+                        cnae TEXT NOT NULL,
+                        grauRisco INTEGER NOT NULL,
+                        idEndereco INTEGER
+                    );
+
+                    INSERT INTO empresa
+                    VALUES (1, 15179942000156,  'Xavier Assis Academia LTDA',   'Academia Xavier', '9313-1/00', 2, 3),
+                    (2, 31861960000170,  'Campos Barroso Atacado EPP',   'Atacado Campos', '4692-3/00', 1, 4),
+                    (3, 28446294000107, 'Malaquias Boelho Pinturas LTDA',  'Pinturas Malaquias', '4330-4/04', 1, 5),
+                    (4, 52193691000190, 'Pires Grilo Consultoria EPP',  'Consultoria Pires', '7020-4/00', 1, 1);
+                ";
+                createEmpresas.ExecuteNonQuery();
+            }
         }
 
         public List<Funcionario> RetornaFuncionarios()
@@ -115,6 +148,32 @@ namespace SigoWebApp.Data
                     });
                 }
             return funcionarios;
+        }
+
+        public List<Empresa> RetornaEmpresas()
+        {
+            var empresas = new List<Empresa>();
+            _connection.Open();
+
+            var command = _connection.CreateCommand();
+            command.CommandText =
+            @"
+                SELECT *
+                FROM empresa
+            ";
+            using var reader = command.ExecuteReader();
+            while (reader.Read())
+            {
+                empresas.Add(new Empresa
+                {
+                    Cnpj = reader.GetDouble(1),
+                    RazaoSocial = reader.GetString(2),
+                    NomeFantasia = reader.GetString(3),
+                    Cnae = reader.GetString(4),
+                    GrauRisco = reader.GetInt32(5)
+                });
+            }
+            return empresas;
         }
 
         public List<Funcionario> RetornaFuncionarioPorId(int id)
@@ -148,6 +207,37 @@ namespace SigoWebApp.Data
                 }
             }
             return funcionario;
+        }
+
+        public List<Empresa> RetornaEmpresaPorId(int id)
+        {
+            var empresa = new List<Empresa>();
+            _connection.Open();
+
+            var command = _connection.CreateCommand();
+            command.CommandText =
+            @"
+                SELECT *
+                FROM empresa
+                WHERE id = $id
+            ";
+            command.Parameters.AddWithValue("$id", id);
+
+            using (var reader = command.ExecuteReader())
+            {
+                while (reader.Read())
+                {
+                    empresa.Add(new Empresa
+                    {
+                        Cnpj = reader.GetDouble(1),
+                        RazaoSocial = reader.GetString(2),
+                        NomeFantasia = reader.GetString(3),
+                        Cnae = reader.GetString(4),
+                        GrauRisco = reader.GetInt32(5)
+                    });
+                }
+            }
+            return empresa;
         }
 
         public string CriaFuncionario(Funcionario funcionario)
@@ -188,11 +278,74 @@ namespace SigoWebApp.Data
             
         }
 
+        public string CriaEmpresa(Empresa empresa)
+        {
+            using var insertEmpresa = _connection.CreateCommand();
+            insertEmpresa.CommandText =
+                @"
+                    INSERT INTO empresa (cnpj, razaoSocial, nomeFantasia, cnae, grauRisco, idEndereco)
+                    VALUES ($cnpj, $razaoSocial, $nomeFantasia, $cnae, $grauRisco, $idEndereco)
+                ";
+            
+            insertEmpresa.Parameters.AddWithValue("$cnpj", empresa.Cnpj);
+            insertEmpresa.Parameters.AddWithValue("$razaoSocial", empresa.RazaoSocial);
+            insertEmpresa.Parameters.AddWithValue("$nomeFantasia", empresa.NomeFantasia);
+            insertEmpresa.Parameters.AddWithValue("$cnae", empresa.Cnae);
+            insertEmpresa.Parameters.AddWithValue("$grauRisco", empresa.GrauRisco);
+            insertEmpresa.Parameters.AddWithValue("$idEndereco", 1);
+
+            try
+            {
+                insertEmpresa.ExecuteNonQuery();
+
+                insertEmpresa.CommandText =
+                @"
+                    SELECT last_insert_rowid()
+                ";
+                var id = insertEmpresa.ExecuteScalar();
+                //var id = 11;
+
+                return "Empresa cadastrada com sucesso. Id: " + id.ToString();
+            }
+            catch (SqliteException ex)
+            {
+                return "Erro ao inserir empresa.";
+            }
+
+        }
+
+        public string DeletarEmpresa(int id)
+        {
+            var empresa = RetornaEmpresaPorId(id);
+
+            if (empresa.Count == 0)
+            {
+                return $"Empresa com id {id} não existe";
+            }
+
+            using var deleteEmpresa = _connection.CreateCommand();
+            deleteEmpresa.CommandText = @" DELETE FROM empresa WHERE id = $id";
+
+            deleteEmpresa.Parameters.AddWithValue("$id", id);
+
+            try
+            {
+                deleteEmpresa.ExecuteNonQuery();
+
+                return "Empresa removida com sucesso.";
+            }
+            catch (SqliteException ex)
+            {
+                return "Erro ao remover empresa";
+            }
+        }
+
         public void FechaConexao() 
         {
             SqliteConnection.ClearAllPools();
             _connection.Close();
             _connection.Dispose();
         }
+
     }
 }

@@ -1,6 +1,9 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using SigoWebApp.Data;
 using SigoWebApp.Models;
+using System.Data;
+using System.Diagnostics.CodeAnalysis;
 using System.Net;
 
 namespace SigoWebApp.Controllers
@@ -9,22 +12,44 @@ namespace SigoWebApp.Controllers
     [ApiController]
     public class EmpresaController : ControllerBase
     {
+        private readonly IDbConnectionService _context;
+
+        public EmpresaController(IDbConnectionService context)
+        {
+            _context = context;
+            _context.CriaTabelas();
+        }
+
         [HttpGet]
         public List<Empresa> RetornaEmpresas()
         {
-            throw new NotImplementedException();
+            List<Empresa> empresas = new List<Empresa>();
+            empresas = _context.RetornaEmpresas();
+
+            return empresas;
         }
 
-        //[HttpGet]
-        //public Empresa RetornaEmpresa(int id) 
-        //{
-        //    throw new NotImplementedException(); 
-        //}
+        [HttpGet("{id}")]
+        public List<Empresa> RetornaEmpresa(int id) 
+        {
+            List<Empresa> empresa = new List<Empresa>();
+            empresa = _context.RetornaEmpresaPorId(id);
+
+            return empresa;
+        }
 
         [HttpPost]
-        HttpStatusCode SalvaEmpresa(Empresa empresa)
+        public string SalvaEmpresa(Empresa empresa)
         {
-            throw new NotImplementedException();
+            var result = _context.CriaEmpresa(empresa);
+            return result;
+        }
+
+        [HttpDelete]
+        public string RemoverEmpresa(int id)
+        {
+            var result = _context.DeletarEmpresa(id);
+            return result;
         }
 
     }
